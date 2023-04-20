@@ -2,6 +2,7 @@ package bingo;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Point;
@@ -32,9 +33,11 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.TableView.TableCell;
 
 /**
  *
@@ -91,7 +94,7 @@ public class Cliente extends JFrame {
             }
         }
 
-            // Convertir los valores de int a Object
+        // Convertir los valores de int a Object
         Object[][] matrizObject = new Object[5][5];
         for (int i = 0; i < 5; i++) {
             for (int j = 0; j < 5; j++) {
@@ -103,21 +106,56 @@ public class Cliente extends JFrame {
         DefaultTableModel modeloTabla = new DefaultTableModel();
         modeloTabla.setDataVector(matrizObject, new Object[]{"B", "I", "N", "G", "O"});
 
-        // Crear la tabla y agregarla al panel
+        // Crear la tabla
         JTable tabla = new JTable(modeloTabla);
         tabla.setPreferredScrollableViewportSize(new Dimension(500, 300)); // establecer el tamaño de la tabla
         tabla.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS); // ajustar automáticamente el tamaño de las columnas
+        tabla.setRowHeight(entradaTexto.getFont().getSize() + 10); // Establecer la altura de las filas
+
+        // Agregar la tabla al panel
         JPanel panelTabla = new JPanel(new BorderLayout());
         panelTabla.add(tabla.getTableHeader(), BorderLayout.NORTH);
         panelTabla.add(tabla, BorderLayout.CENTER);
         panelTabla.setPreferredSize(new Dimension(500, 1000)); // Establecer el ancho del panel
-        
 
         // Agregar el panel de la tabla al panel principal
         JPanel panelPrincipal = new JPanel(new BorderLayout());
         panelPrincipal.add(panelTabla, BorderLayout.WEST);
         panelPrincipal.add(panelMensajes, BorderLayout.CENTER);
         add(panelPrincipal, BorderLayout.CENTER);
+
+        // Agregar controlador de eventos de clic a la tabla
+        tabla.addMouseListener(new MouseAdapter() {
+            private Component ultimaCeldaClickeada = null;
+
+            public void mouseClicked(MouseEvent e) {
+                int columna = tabla.columnAtPoint(e.getPoint());
+                int fila = tabla.rowAtPoint(e.getPoint());
+
+                if (fila >= 0 && columna >= 0) {
+                    // Obtener la celda clickeada
+                    TableCellRenderer renderer = tabla.getCellRenderer(fila, columna);
+                    Component celda = tabla.prepareRenderer(renderer, fila, columna);
+
+                    // Obtener el valor de la celda clickeada
+                    Object valor = tabla.getValueAt(fila, columna);
+
+                    // Si el valor es un entero, mostrar el mensaje en la consola
+                    if (valor instanceof Integer) {
+                        int numero = (Integer) valor;
+                        System.out.println("Se marcó el número " + numero);
+
+                        // Cambiar el color de la celda clickeada
+                        if (ultimaCeldaClickeada != null) {
+                            ultimaCeldaClickeada.setBackground(Color.WHITE);
+                        }
+
+                        celda.setBackground(Color.GREEN);
+                        ultimaCeldaClickeada = celda;
+                    }
+                }
+            }
+        });
 
         // Agregar botón para salir del juego
         JButton salir = new JButton("Salir");
@@ -141,47 +179,15 @@ public class Cliente extends JFrame {
         DefaultCaret caret = (DefaultCaret) entradaTexto.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
-        entradaTexto.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                int offset = entradaTexto.viewToModel2D(e.getPoint());
-                try {
-                    int start = entradaTexto.getLineStartOffset(entradaTexto.getLineOfOffset(offset));
-                    int end = entradaTexto.getLineEndOffset(entradaTexto.getLineOfOffset(offset));
-                    String texto = entradaTexto.getText(start, end - start).trim();
-                    String numeroString = texto.replaceAll("\\D+", "");
-                    if (numeroString.isEmpty()) {
-                        return;
-                    }
-                    int numero = Integer.parseInt(numeroString);
-
-                    if (numerosMarcados.contains(numero)) {
-                        System.out.println("El número " + numero + " ya está marcado.");
-                    } else {
-                        numerosMarcados.add(numero);
-                        System.out.println("Número marcado: " + numero);
-                    }
-
-                } catch (BadLocationException ex) {
-                    System.out.println("Error al marcar número: ");
-                    ex.printStackTrace();
-                } catch (NumberFormatException ex) {
-                    System.out.println("Error al obtener el número: ");
-                    ex.printStackTrace();
-                }
-            }
-        });
-        
-        
         setVisible(true);
 
         conectarAlServidor();
 
     }
-    
 
     private void conectarAlServidor() {
         try {
-            socket = new Socket("localHost", 7000);
+            socket = new Socket("192.168.0.8", 7000);
 
             entrada = new DataInputStream(socket.getInputStream());
             salida = new DataOutputStream(socket.getOutputStream());
