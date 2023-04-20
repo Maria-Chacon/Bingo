@@ -14,6 +14,7 @@ import java.util.logging.Logger;
  * @author MariaCh
  */
 public class Flujo extends Thread {
+
     private Socket socket;
     private DataInputStream entrada;
     private DataOutputStream salida;
@@ -39,25 +40,27 @@ public class Flujo extends Thread {
     }
 
     public void run() {
-        int p=1;
+        int p = 1;
         try {
             while (true) {
                 int numero = Servidor.generarNumero();
-                Servidor.broadcast(p +" Número generado: " + numero);
+                Servidor.broadcast("Número generado: " + numero);
 
-                Thread.sleep(500);
+                Thread.sleep(2000);
                 p++;
-
+                
                 if (p == 76) {
-                    // Cerrar el socket y reiniciar el servidor
-                    socket.close();
+                    try {
+                        // Cerrar el socket y reiniciar el servidor
+                        socket.close();
+                    } catch (IOException ex) {
+                        Logger.getLogger(Flujo.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                     break;
                 }
             }
         } catch (InterruptedException ie) {
             System.out.println("Error: " + ie);
-        } catch (IOException ioe) {
-            System.out.println("Error al cerrar el socket." + ioe);
         } finally {
             try {
                 entrada.close();

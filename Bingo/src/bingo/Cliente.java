@@ -1,38 +1,45 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package bingo;
+
 import java.awt.BorderLayout;
-import java.awt.Frame;
-import java.awt.TextField;
+import java.awt.Color;
+import java.awt.Point;
 import java.awt.TextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
 import javax.swing.JButton;
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
+import javax.swing.text.DefaultHighlighter;
 
 /**
  *
  * @author MariaCh
  */
 public class Cliente extends JFrame {
+
     private static final long serialVersionUID = 1L;
-    private final int PUERTO = 7000;
+
     private Socket socket;
     private DataInputStream entrada;
     private DataOutputStream salida;
-    private JTextArea areaTexto;
-
+    private JTextArea entradaTexto;
+    private ArrayList<Integer> numerosMarcados = new ArrayList<>();
 
     public Cliente() {
+
         setTitle("Bingo");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(500, 300);
@@ -42,15 +49,15 @@ public class Cliente extends JFrame {
 
         JPanel panel = new JPanel(new BorderLayout());
 
-        areaTexto = new JTextArea();
-        areaTexto.setEditable(false);
+        entradaTexto = new JTextArea();
+        entradaTexto.setEditable(false);
 
-        JScrollPane scrollPane = new JScrollPane(areaTexto);
+        JScrollPane scrollPane = new JScrollPane(entradaTexto);
 
         panel.add(scrollPane, BorderLayout.CENTER);
 
         add(panel, BorderLayout.CENTER);
-    // Agregar botón para salir del juego
+        // Agregar botón para salir del juego
         JButton salir = new JButton("Salir");
         salir.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -61,14 +68,49 @@ public class Cliente extends JFrame {
         panelBoton.add(salir);
         add(panelBoton, BorderLayout.SOUTH);
 
+        // Hace que la JTextArea siempre muestre el último mensaje recibido
+        DefaultCaret caret = (DefaultCaret) entradaTexto.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+
+        entradaTexto.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                int offset = entradaTexto.viewToModel2D(e.getPoint());
+                try {
+                    int start = entradaTexto.getLineStartOffset(entradaTexto.getLineOfOffset(offset));
+                    int end = entradaTexto.getLineEndOffset(entradaTexto.getLineOfOffset(offset));
+                    String texto = entradaTexto.getText(start, end - start).trim();
+                    String numeroString = texto.replaceAll("\\D+", "");
+                    if (numeroString.isEmpty()) {
+                        return;
+                    }
+                    int numero = Integer.parseInt(numeroString);
+
+                    if (numerosMarcados.contains(numero)) {
+                        System.out.println("El número " + numero + " ya está marcado.");
+                    } else {
+                        numerosMarcados.add(numero);
+                        System.out.println("Número marcado: " + numero);
+                    }
+
+                } catch (BadLocationException ex) {
+                    System.out.println("Error al marcar número: ");
+                    ex.printStackTrace();
+                } catch (NumberFormatException ex) {
+                    System.out.println("Error al obtener el número: ");
+                    ex.printStackTrace();
+                }
+            }
+        });
+
         setVisible(true);
 
         conectarAlServidor();
+
     }
 
     private void conectarAlServidor() {
         try {
-            socket = new Socket("localhost", PUERTO);
+            socket = new Socket("localHost", 7000);
 
             entrada = new DataInputStream(socket.getInputStream());
             salida = new DataOutputStream(socket.getOutputStream());
@@ -81,12 +123,12 @@ public class Cliente extends JFrame {
     }
 
     private class EscuchaServidor implements Runnable {
+
         public void run() {
             try {
                 while (true) {
                     String mensaje = entrada.readUTF();
-                    areaTexto.append(mensaje + "\n");
-                    areaTexto.setCaretPosition(areaTexto.getDocument().getLength());
+                    entradaTexto.append(mensaje + "\n");
                 }
             } catch (IOException ioe) {
                 System.out.println("Error al escuchar al servidor." + ioe);
@@ -105,4 +147,5 @@ public class Cliente extends JFrame {
     public static void main(String[] args) {
         new Cliente();
     }
+
 }

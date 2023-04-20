@@ -1,25 +1,25 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package bingo;
+
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 import java.util.Vector;
+
 /**
  *
  * @author MariaCh
  */
 public class Servidor extends Thread {
+
     public static Vector<Flujo> usuarios = new Vector<Flujo>();
     private static int indiceActual = 0;
     private static ArrayList<Integer> numeros = new ArrayList<Integer>();
-  
+
     public static void main(String[] args) {
-        
+
         ServerSocket sfd = null;
         try {
             sfd = new ServerSocket(7000);
@@ -44,6 +44,7 @@ public class Servidor extends Thread {
             }
         }
     }
+
     public static void broadcast(String mensaje) {
         for (Flujo flujo : usuarios) {
             flujo.enviarMensaje(mensaje);
@@ -62,6 +63,6 @@ public class Servidor extends Thread {
         int siguienteNumero = numeros.get(indiceActual);
         indiceActual++;
         return siguienteNumero;
- 
+
     }
 }
