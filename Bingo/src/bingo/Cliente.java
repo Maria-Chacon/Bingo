@@ -3,6 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package bingo;
+import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.TextField;
 import java.awt.TextArea;
@@ -12,33 +13,53 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
 /**
  *
  * @author MariaCh
  */
-public class Cliente extends Frame  {
+public class Cliente extends JFrame {
     private static final long serialVersionUID = 1L;
-
+    private final int PUERTO = 7000;
     private Socket socket;
     private DataInputStream entrada;
     private DataOutputStream salida;
-   // private TextField salidaTexto;
-    private TextArea entradaTexto;
+    private JTextArea areaTexto;
+
 
     public Cliente() {
         setTitle("Bingo");
-        setSize(350, 200);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(500, 300);
+        setLocationRelativeTo(null);
         setResizable(false);
+        setLayout(new BorderLayout());
 
-        //salidaTexto = new TextField(30);
-        //salidaTexto.addActionListener(this);
+        JPanel panel = new JPanel(new BorderLayout());
 
-        entradaTexto = new TextArea();
-        entradaTexto.setEditable(false);
+        areaTexto = new JTextArea();
+        areaTexto.setEditable(false);
 
-        //add(salidaTexto, "South");
-        add(entradaTexto, "Center");
+        JScrollPane scrollPane = new JScrollPane(areaTexto);
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        add(panel, BorderLayout.CENTER);
+    // Agregar botón para salir del juego
+        JButton salir = new JButton("Salir");
+        salir.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+        JPanel panelBoton = new JPanel();
+        panelBoton.add(salir);
+        add(panelBoton, BorderLayout.SOUTH);
 
         setVisible(true);
 
@@ -47,7 +68,7 @@ public class Cliente extends Frame  {
 
     private void conectarAlServidor() {
         try {
-            socket = new Socket("localhost", 7000);
+            socket = new Socket("localhost", PUERTO);
 
             entrada = new DataInputStream(socket.getInputStream());
             salida = new DataOutputStream(socket.getOutputStream());
@@ -59,23 +80,13 @@ public class Cliente extends Frame  {
         }
     }
 
-//    public void actionPerformed(ActionEvent e) {
-//        try {
-//            String mensaje = salidaTexto.getText();
-//            salida.writeUTF(mensaje);
-//            salida.flush();
-//            salidaTexto.setText("");
-//        } catch (IOException ioe) {
-//            System.out.println("Error al enviar mensaje." + ioe);
-//        }
-//    }
-
     private class EscuchaServidor implements Runnable {
         public void run() {
             try {
                 while (true) {
                     String mensaje = entrada.readUTF();
-                    entradaTexto.append(mensaje + "\n");
+                    areaTexto.append(mensaje + "\n");
+                    areaTexto.setCaretPosition(areaTexto.getDocument().getLength());
                 }
             } catch (IOException ioe) {
                 System.out.println("Error al escuchar al servidor." + ioe);
