@@ -5,6 +5,8 @@
 package bingo;
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 import java.util.Vector;
 /**
@@ -13,8 +15,11 @@ import java.util.Vector;
  */
 public class Servidor extends Thread {
     public static Vector<Flujo> usuarios = new Vector<Flujo>();
-
+    private static int indiceActual = 0;
+    private static ArrayList<Integer> numeros = new ArrayList<Integer>();
+  
     public static void main(String[] args) {
+        
         ServerSocket sfd = null;
         try {
             sfd = new ServerSocket(7000);
@@ -39,7 +44,6 @@ public class Servidor extends Thread {
             }
         }
     }
-
     public static void broadcast(String mensaje) {
         for (Flujo flujo : usuarios) {
             flujo.enviarMensaje(mensaje);
@@ -47,7 +51,17 @@ public class Servidor extends Thread {
     }
 
     public static int generarNumero() {
-        Random random = new Random();
-        return random.nextInt(75) + 1;
+        if (indiceActual >= numeros.size()) {
+            // Ya se han devuelto todos los números en el ArrayList, mezclar de nuevo
+            for (int i = 1; i <= 75; i++) {
+                numeros.add(i);
+            }
+            Collections.shuffle(numeros);
+            indiceActual = 0;
+        }
+        int siguienteNumero = numeros.get(indiceActual);
+        indiceActual++;
+        return siguienteNumero;
+ 
     }
 }
