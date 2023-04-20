@@ -2,6 +2,8 @@ package bingo;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.TextArea;
 import java.awt.event.ActionEvent;
@@ -14,12 +16,22 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.DefaultHighlighter;
@@ -37,30 +49,87 @@ public class Cliente extends JFrame {
     private DataOutputStream salida;
     private JTextArea entradaTexto;
     private ArrayList<Integer> numerosMarcados = new ArrayList<>();
+//    private JLabel[][] matrizNumeros;
+    private final JButton[][] carton = new JButton[5][5];
+    private final Random random = new Random();
 
     public Cliente() {
 
         setTitle("Bingo");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(500, 300);
+        setSize(1000, 600);
         setLocationRelativeTo(null);
         setResizable(false);
         setLayout(new BorderLayout());
 
-        JPanel panel = new JPanel(new BorderLayout());
+        JPanel panelMensajes = new JPanel(new BorderLayout());
+        panelMensajes.setPreferredSize(new Dimension(500, 300));
 
         entradaTexto = new JTextArea();
         entradaTexto.setEditable(false);
+        entradaTexto.setLineWrap(true);
 
-        JScrollPane scrollPane = new JScrollPane(entradaTexto);
+        JScrollPane scrollPaneMensajes = new JScrollPane(entradaTexto);
+        scrollPaneMensajes.setPreferredSize(new Dimension(500, 300));
+        scrollPaneMensajes.setBorder(BorderFactory.createTitledBorder("Mensajes"));
 
-        panel.add(scrollPane, BorderLayout.CENTER);
+        panelMensajes.add(scrollPaneMensajes, BorderLayout.CENTER);
 
-        add(panel, BorderLayout.CENTER);
+        // Crear la tabla con la matriz y agregarla al panel
+        int[][] matriz = new int[5][5];
+        Set<Integer> numerosGenerados = new HashSet<>();
+        Random random = new Random();
+
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                int numero;
+                do {
+                    numero = random.nextInt(75) + 1;
+                } while (numerosGenerados.contains(numero));
+                numerosGenerados.add(numero);
+                matriz[i][j] = numero;
+            }
+        }
+
+            // Convertir los valores de int a Object
+        Object[][] matrizObject = new Object[5][5];
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                matrizObject[i][j] = Integer.valueOf(matriz[i][j]);
+            }
+        }
+
+        // Crear el modelo de la tabla y agregar la matriz
+        DefaultTableModel modeloTabla = new DefaultTableModel();
+        modeloTabla.setDataVector(matrizObject, new Object[]{"B", "I", "N", "G", "O"});
+
+        // Crear la tabla y agregarla al panel
+        JTable tabla = new JTable(modeloTabla);
+        tabla.setPreferredScrollableViewportSize(new Dimension(500, 300)); // establecer el tamaño de la tabla
+        tabla.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS); // ajustar automáticamente el tamaño de las columnas
+        JPanel panelTabla = new JPanel(new BorderLayout());
+        panelTabla.add(tabla.getTableHeader(), BorderLayout.NORTH);
+        panelTabla.add(tabla, BorderLayout.CENTER);
+        panelTabla.setPreferredSize(new Dimension(500, 1000)); // Establecer el ancho del panel
+        
+
+        // Agregar el panel de la tabla al panel principal
+        JPanel panelPrincipal = new JPanel(new BorderLayout());
+        panelPrincipal.add(panelTabla, BorderLayout.WEST);
+        panelPrincipal.add(panelMensajes, BorderLayout.CENTER);
+        add(panelPrincipal, BorderLayout.CENTER);
+
         // Agregar botón para salir del juego
         JButton salir = new JButton("Salir");
         salir.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                try {
+                    entrada.close();
+                    salida.close();
+                    socket.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(Cliente.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 System.exit(0);
             }
         });
@@ -101,12 +170,14 @@ public class Cliente extends JFrame {
                 }
             }
         });
-
+        
+        
         setVisible(true);
 
         conectarAlServidor();
 
     }
+    
 
     private void conectarAlServidor() {
         try {
