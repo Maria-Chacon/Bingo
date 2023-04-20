@@ -6,6 +6,8 @@ package bingo;
 
 import java.io.*;
 import java.net.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -37,15 +39,25 @@ public class Flujo extends Thread {
     }
 
     public void run() {
+        int p=1;
         try {
             while (true) {
                 int numero = Servidor.generarNumero();
-                Servidor.broadcast("Número generado: " + numero);
+                Servidor.broadcast(p +" Número generado: " + numero);
 
-                Thread.sleep(5000);
+                Thread.sleep(500);
+                p++;
+
+                if (p == 76) {
+                    // Cerrar el socket y reiniciar el servidor
+                    socket.close();
+                    break;
+                }
             }
         } catch (InterruptedException ie) {
             System.out.println("Error: " + ie);
+        } catch (IOException ioe) {
+            System.out.println("Error al cerrar el socket." + ioe);
         } finally {
             try {
                 entrada.close();
