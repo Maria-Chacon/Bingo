@@ -17,13 +17,13 @@ import java.net.Socket;
  *
  * @author MariaCh
  */
-public class Cliente extends Frame implements ActionListener {
+public class Cliente extends Frame  {
     private static final long serialVersionUID = 1L;
 
     private Socket socket;
     private DataInputStream entrada;
     private DataOutputStream salida;
-    private TextField salidaTexto;
+   // private TextField salidaTexto;
     private TextArea entradaTexto;
 
     public Cliente() {
@@ -31,13 +31,13 @@ public class Cliente extends Frame implements ActionListener {
         setSize(350, 200);
         setResizable(false);
 
-        salidaTexto = new TextField(30);
-        salidaTexto.addActionListener(this);
+        //salidaTexto = new TextField(30);
+        //salidaTexto.addActionListener(this);
 
         entradaTexto = new TextArea();
         entradaTexto.setEditable(false);
 
-        add(salidaTexto, "South");
+        //add(salidaTexto, "South");
         add(entradaTexto, "Center");
 
         setVisible(true);
@@ -59,16 +59,16 @@ public class Cliente extends Frame implements ActionListener {
         }
     }
 
-    public void actionPerformed(ActionEvent e) {
-        try {
-            String mensaje = salidaTexto.getText();
-            salida.writeUTF(mensaje);
-            salida.flush();
-            salidaTexto.setText("");
-        } catch (IOException ioe) {
-            System.out.println("Error al enviar mensaje." + ioe);
-        }
-    }
+//    public void actionPerformed(ActionEvent e) {
+//        try {
+//            String mensaje = salidaTexto.getText();
+//            salida.writeUTF(mensaje);
+//            salida.flush();
+//            salidaTexto.setText("");
+//        } catch (IOException ioe) {
+//            System.out.println("Error al enviar mensaje." + ioe);
+//        }
+//    }
 
     private class EscuchaServidor implements Runnable {
         public void run() {
