@@ -32,6 +32,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.text.BadLocationException;
@@ -107,10 +108,22 @@ public class Cliente extends JFrame {
         modeloTabla.setDataVector(matrizObject, new Object[]{"B", "I", "N", "G", "O"});
 
         // Crear la tabla
-        JTable tabla = new JTable(modeloTabla);
+        JTable tabla = new JTable(modeloTabla) {
+            // Sobrescribir el método prepareRenderer para establecer el color de fondo de la celda
+            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+                Component c = super.prepareRenderer(renderer, row, column);
+                c.setBackground(Color.WHITE);
+                return c;
+            }
+        };
         tabla.setPreferredScrollableViewportSize(new Dimension(500, 300)); // establecer el tamaño de la tabla
         tabla.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS); // ajustar automáticamente el tamaño de las columnas
-        tabla.setRowHeight(entradaTexto.getFont().getSize() + 10); // Establecer la altura de las filas
+        tabla.setRowHeight(100); // Establecer la altura de las filas
+
+        // Establecer el renderizador personalizado para cada celda de la tabla
+        DefaultTableCellRenderer renderizador = new DefaultTableCellRenderer();
+        renderizador.setHorizontalAlignment(JLabel.CENTER);
+        tabla.setDefaultRenderer(Object.class, renderizador);
 
         // Agregar la tabla al panel
         JPanel panelTabla = new JPanel(new BorderLayout());
@@ -124,11 +137,17 @@ public class Cliente extends JFrame {
         panelPrincipal.add(panelMensajes, BorderLayout.CENTER);
         add(panelPrincipal, BorderLayout.CENTER);
 
+        tabla.setRowSelectionAllowed(false);
+
+        // Declarar un conjunto para llevar el registro de números seleccionados
+        Set<Integer> numerosSeleccionados = new HashSet<Integer>();
+
         // Agregar controlador de eventos de clic a la tabla
         tabla.addMouseListener(new MouseAdapter() {
             private Component ultimaCeldaClickeada = null;
 
             public void mouseClicked(MouseEvent e) {
+
                 int columna = tabla.columnAtPoint(e.getPoint());
                 int fila = tabla.rowAtPoint(e.getPoint());
 
@@ -140,10 +159,15 @@ public class Cliente extends JFrame {
                     // Obtener el valor de la celda clickeada
                     Object valor = tabla.getValueAt(fila, columna);
 
-                    // Si el valor es un entero, mostrar el mensaje en la consola
+                    // Si el valor es un entero, mostrar el mensaje en la consola y verificar si ya fue seleccionado
                     if (valor instanceof Integer) {
                         int numero = (Integer) valor;
+                        if (numerosSeleccionados.contains(numero)) {
+                            System.out.println("El número " + numero + " ya fue seleccionado anteriormente.");
+                            return; // Salir del método sin cambiar el color de la celda
+                        }
                         System.out.println("Se marcó el número " + numero);
+                        numerosSeleccionados.add(numero); // Agregar el número al conjunto de seleccionados
 
                         // Cambiar el color de la celda clickeada
                         if (ultimaCeldaClickeada != null) {
@@ -152,6 +176,12 @@ public class Cliente extends JFrame {
 
                         celda.setBackground(Color.GREEN);
                         ultimaCeldaClickeada = celda;
+
+                        // Si se han marcado todas las celdas, imprimir "bingo" en la consola y cerrar el programa
+                        if (numerosSeleccionados.size() == matrizObject.length * matrizObject[0].length) {
+                            System.out.println("Bingo!");
+                            System.exit(0);
+                        }
                     }
                 }
             }
@@ -187,7 +217,7 @@ public class Cliente extends JFrame {
 
     private void conectarAlServidor() {
         try {
-            socket = new Socket("192.168.0.8", 7000);
+            socket = new Socket("192.168.0.6", 7000);
 
             entrada = new DataInputStream(socket.getInputStream());
             salida = new DataOutputStream(socket.getOutputStream());
