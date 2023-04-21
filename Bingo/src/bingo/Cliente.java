@@ -217,7 +217,7 @@ public class Cliente extends JFrame {
 
     private void conectarAlServidor() {
         try {
-            socket = new Socket("192.168.0.6", 7000);
+            socket = new Socket("192.168.0.6", 5000);
 
             entrada = new DataInputStream(socket.getInputStream());
             salida = new DataOutputStream(socket.getOutputStream());

@@ -18,6 +18,7 @@ public class Servidor extends Thread {
     public static Vector<Flujo> usuarios = new Vector<Flujo>();
     private static int indiceActual = 0;
     private static ArrayList<Integer> numeros = new ArrayList<Integer>();
+  
 
     public static void main(String[] args) {
 

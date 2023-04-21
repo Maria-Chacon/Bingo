@@ -51,7 +51,7 @@ public class Flujo extends Thread {
                 
                 if (p == 76) {
                     try {
-                        // Cerrar el socket y reiniciar el servidor
+                        // Cerrar el socket
                         socket.close();
                     } catch (IOException ex) {
                         Logger.getLogger(Flujo.class.getName()).log(Level.SEVERE, null, ex);
